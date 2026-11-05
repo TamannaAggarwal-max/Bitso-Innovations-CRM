@@ -1,0 +1,194 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  TEAM_LEAD
+  EMPLOYEE
+}
+
+enum Department {
+  IT_TECH
+  SALES_COMMERCIAL
+  CUSTOMER_SUPPORT
+  OPERATIONS_INFRASTRUCTURE
+  FINANCE_ACCOUNTS
+  MARKETING_GROWTH
+  HR_PEOPLE_OPERATIONS
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL
+  WON
+  LOST
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  BLOCKED
+  DONE
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING
+  RESOLVED
+  CLOSED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  phone        String?
+  passwordHash String
+  role         Role     @default(EMPLOYEE)
+  department   Department @default(IT_TECH)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  assignedLeads Lead[]  @relation("LeadOwner")
+  assignedTasks Task[]  @relation("TaskAssignee")
+  projects     Project[] @relation("ProjectOwner")
+  followups    FollowUp[] @relation("FollowUpOwner")
+  sales        Sale[] @relation("SaleOwner")
+  activities   Activity[]
+  tickets      Ticket[] @relation("TicketOwner")
+}
+
+model Lead {
+  id          String @id @default(cuid())
+  name        String
+  email       String?
+  phone       String?
+  company     String?
+  source      String?
+  status      LeadStatus @default(NEW)
+  value       Float @default(0)
+  notes       String?
+  department  Department?
+  ownerId     String?
+  owner       User? @relation("LeadOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  followups   FollowUp[]
+}
+
+model Client {
+  id          String @id @default(cuid())
+  name        String
+  email       String?
+  phone       String?
+  company     String?
+  address     String?
+  notes       String?
+  department  Department?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Project {
+  id          String @id @default(cuid())
+  name        String
+  description String?
+  status      String @default("PLANNING")
+  budget      Float @default(0)
+  startDate   DateTime?
+  dueDate     DateTime?
+  department  Department?
+  ownerId     String?
+  owner       User? @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tasks       Task[]
+}
+
+model Task {
+  id          String @id @default(cuid())
+  title       String
+  description String?
+  status      TaskStatus @default(TODO)
+  priority    Priority @default(MEDIUM)
+  dueDate     DateTime?
+  department  Department?
+  assigneeId  String?
+  assignee    User? @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Sale {
+  id          String @id @default(cuid())
+  title       String
+  amount      Float
+  status      String @default("PENDING")
+  saleDate    DateTime @default(now())
+  clientName  String?
+  department  Department?
+  ownerId     String?
+  owner       User? @relation("SaleOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model FollowUp {
+  id          String @id @default(cuid())
+  title       String
+  details     String?
+  dueAt       DateTime
+  completed   Boolean @default(false)
+  department  Department?
+  leadId      String?
+  lead        Lead? @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  ownerId     String?
+  owner       User? @relation("FollowUpOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Ticket {
+  id          String       @id @default(cuid())
+  title       String
+  description String?
+  status      TicketStatus @default(OPEN)
+  priority    Priority     @default(MEDIUM)
+  customerName String?
+  customerEmail String?
+  department  Department?
+  ownerId     String?
+  owner       User?        @relation("TicketOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Activity {
+  id         String     @id @default(cuid())
+  action     String
+  entityType String
+  entityId   String?
+  details    String?
+  department Department?
+  userId     String?
+  user       User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt  DateTime   @default(now())
+}
