@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/reset-password",
+      "destination": "/"
+    },
+    {
+      "source": "/forgot-password",
+      "destination": "/"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ]
+}
