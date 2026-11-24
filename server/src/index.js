@@ -18,6 +18,7 @@ app.use(cors({ origin: process.env.CLIENT_URL?.split(",") || "http://localhost:5
 app.use(express.json({ limit: "1mb" }));
 app.use(morgan("dev"));
 app.use(["/api/auth/login", "/api/auth/register"], rateLimit({ windowMs: 15*60*1000, limit: 20, standardHeaders: true, legacyHeaders: false }));
+app.use(["/api/auth/request-reset", "/api/auth/confirm-reset"], rateLimit({ windowMs: 15*60*1000, limit: 5, standardHeaders: true, legacyHeaders: false }));
 app.get("/api/health", async (req,res) => {
 	try {
 		await prisma.$queryRaw`SELECT 1`;
